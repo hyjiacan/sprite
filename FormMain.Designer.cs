@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
@@ -44,15 +45,15 @@
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnSprite = new System.Windows.Forms.Button();
             this.buttonBrowse = new System.Windows.Forms.Button();
-            this.buttonVRange = new System.Windows.Forms.Button();
-            this.buttonHRange = new System.Windows.Forms.Button();
             this.buttonMakeBigImageCss = new System.Windows.Forms.Button();
             this.panelBottom = new System.Windows.Forms.Panel();
-            this.panelPhone = new System.Windows.Forms.Panel();
-            this.label3 = new System.Windows.Forms.Label();
-            this.linkLabelLess = new System.Windows.Forms.LinkLabel();
-            this.linkLabelSass = new System.Windows.Forms.LinkLabel();
-            this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
+            this.lkRecent = new System.Windows.Forms.LinkLabel();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.rdOrderByName = new System.Windows.Forms.RadioButton();
+            this.rdOrderBySize = new System.Windows.Forms.RadioButton();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.rdHorizon = new System.Windows.Forms.RadioButton();
+            this.rdVertical = new System.Windows.Forms.RadioButton();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -60,16 +61,19 @@
             this.txtBase64Sass = new System.Windows.Forms.TextBox();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.txtBase64Css = new System.Windows.Forms.TextBox();
+            this.cbAlign = new System.Windows.Forms.CheckBox();
             this.tbPrefix = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.tbSrc = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panelImages = new System.Windows.Forms.Panel();
-            this.label2 = new System.Windows.Forms.Label();
-            this.tbSrc = new System.Windows.Forms.TextBox();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.panelTop.SuspendLayout();
             this.panelBottom.SuspendLayout();
-            this.panelPhone.SuspendLayout();
+            this.panel3.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -139,7 +143,7 @@
             this.txtName.ForeColor = System.Drawing.Color.RoyalBlue;
             this.txtName.Location = new System.Drawing.Point(130, 41);
             this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(680, 21);
+            this.txtName.Size = new System.Drawing.Size(121, 21);
             this.txtName.TabIndex = 16;
             this.txtName.Text = "sprite-icon";
             this.txtName.TextChanged += new System.EventHandler(this.txtName_TextChanged);
@@ -155,7 +159,7 @@
             this.txtCss.Name = "txtCss";
             this.txtCss.ReadOnly = true;
             this.txtCss.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtCss.Size = new System.Drawing.Size(790, 101);
+            this.txtCss.Size = new System.Drawing.Size(790, 186);
             this.txtCss.TabIndex = 19;
             this.txtCss.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtCss_KeyDown);
             // 
@@ -164,9 +168,9 @@
             this.chkBoxPhone.AutoSize = true;
             this.chkBoxPhone.Location = new System.Drawing.Point(283, 101);
             this.chkBoxPhone.Name = "chkBoxPhone";
-            this.chkBoxPhone.Size = new System.Drawing.Size(96, 16);
+            this.chkBoxPhone.Size = new System.Drawing.Size(84, 16);
             this.chkBoxPhone.TabIndex = 20;
-            this.chkBoxPhone.Text = "是否是手机端";
+            this.chkBoxPhone.Text = "用于手机端";
             this.chkBoxPhone.UseVisualStyleBackColor = true;
             this.chkBoxPhone.CheckedChanged += new System.EventHandler(this.chkBoxPhone_CheckedChanged);
             // 
@@ -176,8 +180,6 @@
             this.panelTop.Controls.Add(this.btnAdd);
             this.panelTop.Controls.Add(this.btnSprite);
             this.panelTop.Controls.Add(this.buttonBrowse);
-            this.panelTop.Controls.Add(this.buttonVRange);
-            this.panelTop.Controls.Add(this.buttonHRange);
             this.panelTop.Controls.Add(this.buttonMakeBigImageCss);
             this.panelTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelTop.Location = new System.Drawing.Point(3, 3);
@@ -244,38 +246,6 @@
             this.buttonBrowse.UseVisualStyleBackColor = false;
             this.buttonBrowse.Click += new System.EventHandler(this.buttonBrowse_Click);
             // 
-            // buttonVRange
-            // 
-            this.buttonVRange.BackColor = System.Drawing.Color.RoyalBlue;
-            this.buttonVRange.FlatAppearance.BorderSize = 0;
-            this.buttonVRange.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonVRange.ForeColor = System.Drawing.Color.White;
-            this.buttonVRange.Image = global::CssSprite.Properties.Resources.vertical;
-            this.buttonVRange.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.buttonVRange.Location = new System.Drawing.Point(406, 9);
-            this.buttonVRange.Name = "buttonVRange";
-            this.buttonVRange.Size = new System.Drawing.Size(134, 40);
-            this.buttonVRange.TabIndex = 4;
-            this.buttonVRange.Text = "小图竖排";
-            this.buttonVRange.UseVisualStyleBackColor = false;
-            this.buttonVRange.Click += new System.EventHandler(this.ButtonVRange_Click);
-            // 
-            // buttonHRange
-            // 
-            this.buttonHRange.BackColor = System.Drawing.Color.RoyalBlue;
-            this.buttonHRange.FlatAppearance.BorderSize = 0;
-            this.buttonHRange.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonHRange.ForeColor = System.Drawing.Color.White;
-            this.buttonHRange.Image = global::CssSprite.Properties.Resources.horizontal;
-            this.buttonHRange.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.buttonHRange.Location = new System.Drawing.Point(546, 9);
-            this.buttonHRange.Name = "buttonHRange";
-            this.buttonHRange.Size = new System.Drawing.Size(115, 40);
-            this.buttonHRange.TabIndex = 5;
-            this.buttonHRange.Text = "小图横排";
-            this.buttonHRange.UseVisualStyleBackColor = false;
-            this.buttonHRange.Click += new System.EventHandler(this.buttonHRange_Click);
-            // 
             // buttonMakeBigImageCss
             // 
             this.buttonMakeBigImageCss.BackColor = System.Drawing.Color.RoyalBlue;
@@ -293,8 +263,11 @@
             // 
             // panelBottom
             // 
-            this.panelBottom.Controls.Add(this.panelPhone);
+            this.panelBottom.Controls.Add(this.lkRecent);
+            this.panelBottom.Controls.Add(this.panel3);
+            this.panelBottom.Controls.Add(this.panel2);
             this.panelBottom.Controls.Add(this.tabControl);
+            this.panelBottom.Controls.Add(this.cbAlign);
             this.panelBottom.Controls.Add(this.chkBoxPhone);
             this.panelBottom.Controls.Add(this.label1);
             this.panelBottom.Controls.Add(this.comboBoxImgType);
@@ -310,62 +283,87 @@
             this.panelBottom.Size = new System.Drawing.Size(817, 346);
             this.panelBottom.TabIndex = 0;
             // 
-            // panelPhone
+            // lkRecent
             // 
-            this.panelPhone.Controls.Add(this.label3);
-            this.panelPhone.Controls.Add(this.linkLabelLess);
-            this.panelPhone.Controls.Add(this.linkLabelSass);
-            this.panelPhone.Controls.Add(this.linkLabelHelp);
-            this.panelPhone.Location = new System.Drawing.Point(403, 97);
-            this.panelPhone.Name = "panelPhone";
-            this.panelPhone.Size = new System.Drawing.Size(407, 28);
-            this.panelPhone.TabIndex = 22;
-            this.panelPhone.Visible = false;
+            this.lkRecent.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.lkRecent.Location = new System.Drawing.Point(480, 14);
+            this.lkRecent.Name = "lkRecent";
+            this.lkRecent.Size = new System.Drawing.Size(323, 111);
+            this.lkRecent.TabIndex = 26;
+            this.lkRecent.VisitedLinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.lkRecent.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LkRecent_LinkClicked);
             // 
-            // label3
+            // panel3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(2, 9);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(41, 12);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "帮助：";
+            this.panel3.Controls.Add(this.rdOrderByName);
+            this.panel3.Controls.Add(this.rdOrderBySize);
+            this.panel3.Location = new System.Drawing.Point(375, 4);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(99, 62);
+            this.panel3.TabIndex = 25;
             // 
-            // linkLabelLess
+            // rdOrderByName
             // 
-            this.linkLabelLess.AutoSize = true;
-            this.linkLabelLess.Location = new System.Drawing.Point(303, 9);
-            this.linkLabelLess.Name = "linkLabelLess";
-            this.linkLabelLess.Size = new System.Drawing.Size(77, 12);
-            this.linkLabelLess.TabIndex = 0;
-            this.linkLabelLess.TabStop = true;
-            this.linkLabelLess.Text = "Less变量合集";
-            this.linkLabelLess.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelLess_LinkClicked);
+            this.rdOrderByName.AutoSize = true;
+            this.rdOrderByName.Location = new System.Drawing.Point(18, 8);
+            this.rdOrderByName.Name = "rdOrderByName";
+            this.rdOrderByName.Size = new System.Drawing.Size(59, 16);
+            this.rdOrderByName.TabIndex = 24;
+            this.rdOrderByName.Text = "按名称";
+            this.rdOrderByName.UseVisualStyleBackColor = true;
+            this.rdOrderByName.CheckedChanged += new System.EventHandler(this.ResumeLayout);
             // 
-            // linkLabelSass
+            // rdOrderBySize
             // 
-            this.linkLabelSass.AutoSize = true;
-            this.linkLabelSass.Location = new System.Drawing.Point(208, 9);
-            this.linkLabelSass.Name = "linkLabelSass";
-            this.linkLabelSass.Size = new System.Drawing.Size(77, 12);
-            this.linkLabelSass.TabIndex = 0;
-            this.linkLabelSass.TabStop = true;
-            this.linkLabelSass.Text = "Sass变量合集";
-            this.linkLabelSass.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSass_LinkClicked);
+            this.rdOrderBySize.AutoSize = true;
+            this.rdOrderBySize.Checked = true;
+            this.rdOrderBySize.Location = new System.Drawing.Point(18, 38);
+            this.rdOrderBySize.Name = "rdOrderBySize";
+            this.rdOrderBySize.Size = new System.Drawing.Size(59, 16);
+            this.rdOrderBySize.TabIndex = 24;
+            this.rdOrderBySize.TabStop = true;
+            this.rdOrderBySize.Text = "按尺寸";
+            this.rdOrderBySize.UseVisualStyleBackColor = true;
+            this.rdOrderBySize.CheckedChanged += new System.EventHandler(this.ResumeLayout);
             // 
-            // linkLabelHelp
+            // panel2
             // 
-            this.linkLabelHelp.AutoSize = true;
-            this.linkLabelHelp.Location = new System.Drawing.Point(50, 9);
-            this.linkLabelHelp.Name = "linkLabelHelp";
-            this.linkLabelHelp.Size = new System.Drawing.Size(143, 12);
-            this.linkLabelHelp.TabIndex = 0;
-            this.linkLabelHelp.TabStop = true;
-            this.linkLabelHelp.Text = "手机端页面rem自适应脚本";
-            this.linkLabelHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
+            this.panel2.Controls.Add(this.rdHorizon);
+            this.panel2.Controls.Add(this.rdVertical);
+            this.panel2.Location = new System.Drawing.Point(271, 4);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(98, 62);
+            this.panel2.TabIndex = 25;
+            // 
+            // rdHorizon
+            // 
+            this.rdHorizon.AutoSize = true;
+            this.rdHorizon.Location = new System.Drawing.Point(12, 11);
+            this.rdHorizon.Name = "rdHorizon";
+            this.rdHorizon.Size = new System.Drawing.Size(47, 16);
+            this.rdHorizon.TabIndex = 24;
+            this.rdHorizon.Text = "横排";
+            this.rdHorizon.UseVisualStyleBackColor = true;
+            this.rdHorizon.CheckedChanged += new System.EventHandler(this.buttonHRange_Click);
+            // 
+            // rdVertical
+            // 
+            this.rdVertical.AutoSize = true;
+            this.rdVertical.Checked = true;
+            this.rdVertical.Location = new System.Drawing.Point(12, 38);
+            this.rdVertical.Name = "rdVertical";
+            this.rdVertical.Size = new System.Drawing.Size(47, 16);
+            this.rdVertical.TabIndex = 24;
+            this.rdVertical.TabStop = true;
+            this.rdVertical.Text = "竖排";
+            this.rdVertical.UseVisualStyleBackColor = true;
+            this.rdVertical.CheckedChanged += new System.EventHandler(this.ButtonVRange_Click);
             // 
             // tabControl
             // 
+            this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl.Controls.Add(this.tabPage1);
             this.tabControl.Controls.Add(this.tabPage2);
             this.tabControl.Controls.Add(this.tabPage3);
@@ -393,7 +391,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(796, 107);
+            this.tabPage2.Size = new System.Drawing.Size(796, 192);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "css/less代码";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -404,7 +402,7 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(796, 107);
+            this.tabPage3.Size = new System.Drawing.Size(796, 192);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "sass Base64代码";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -420,7 +418,7 @@
             this.txtBase64Sass.Name = "txtBase64Sass";
             this.txtBase64Sass.ReadOnly = true;
             this.txtBase64Sass.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtBase64Sass.Size = new System.Drawing.Size(790, 101);
+            this.txtBase64Sass.Size = new System.Drawing.Size(790, 186);
             this.txtBase64Sass.TabIndex = 12;
             this.txtBase64Sass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBase64Sass_KeyDown);
             // 
@@ -430,7 +428,7 @@
             this.tabPage4.Location = new System.Drawing.Point(4, 22);
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(796, 107);
+            this.tabPage4.Size = new System.Drawing.Size(796, 192);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "css Base64代码";
             this.tabPage4.UseVisualStyleBackColor = true;
@@ -446,9 +444,20 @@
             this.txtBase64Css.Name = "txtBase64Css";
             this.txtBase64Css.ReadOnly = true;
             this.txtBase64Css.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtBase64Css.Size = new System.Drawing.Size(790, 101);
+            this.txtBase64Css.Size = new System.Drawing.Size(790, 186);
             this.txtBase64Css.TabIndex = 12;
             this.txtBase64Css.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBase64Css_KeyDown);
+            // 
+            // cbAlign
+            // 
+            this.cbAlign.AutoSize = true;
+            this.cbAlign.Location = new System.Drawing.Point(283, 73);
+            this.cbAlign.Name = "cbAlign";
+            this.cbAlign.Size = new System.Drawing.Size(144, 16);
+            this.cbAlign.TabIndex = 20;
+            this.cbAlign.Text = "对齐相邻的同尺寸图片";
+            this.cbAlign.UseVisualStyleBackColor = true;
+            this.cbAlign.CheckedChanged += new System.EventHandler(this.ResumeLayout);
             // 
             // tbPrefix
             // 
@@ -457,7 +466,7 @@
             this.tbPrefix.ForeColor = System.Drawing.Color.RoyalBlue;
             this.tbPrefix.Location = new System.Drawing.Point(130, 70);
             this.tbPrefix.Name = "tbPrefix";
-            this.tbPrefix.Size = new System.Drawing.Size(680, 21);
+            this.tbPrefix.Size = new System.Drawing.Size(121, 21);
             this.tbPrefix.TabIndex = 16;
             this.tbPrefix.Text = "sprite-";
             this.tbPrefix.TextChanged += new System.EventHandler(this.TbPrefix_TextChanged);
@@ -470,6 +479,27 @@
             this.label4.Size = new System.Drawing.Size(65, 12);
             this.label4.TabIndex = 15;
             this.label4.Text = "类名前缀：";
+            // 
+            // tbSrc
+            // 
+            this.tbSrc.BackColor = System.Drawing.Color.White;
+            this.tbSrc.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbSrc.ForeColor = System.Drawing.Color.RoyalBlue;
+            this.tbSrc.Location = new System.Drawing.Point(130, 12);
+            this.tbSrc.Name = "tbSrc";
+            this.tbSrc.Size = new System.Drawing.Size(121, 21);
+            this.tbSrc.TabIndex = 16;
+            this.tbSrc.Text = "src";
+            this.tbSrc.TextChanged += new System.EventHandler(this.txtName_TextChanged);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(35, 14);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(89, 12);
+            this.label2.TabIndex = 15;
+            this.label2.Text = "图片存放目录：";
             // 
             // tableLayoutPanel1
             // 
@@ -501,34 +531,12 @@
             // panelImages
             // 
             this.panelImages.AutoScroll = true;
-            this.panelImages.BackColor = System.Drawing.Color.Transparent;
             this.panelImages.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelImages.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelImages.Location = new System.Drawing.Point(0, 0);
             this.panelImages.Name = "panelImages";
             this.panelImages.Size = new System.Drawing.Size(817, 174);
             this.panelImages.TabIndex = 0;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(35, 14);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(89, 12);
-            this.label2.TabIndex = 15;
-            this.label2.Text = "图片存放目录：";
-            // 
-            // tbSrc
-            // 
-            this.tbSrc.BackColor = System.Drawing.Color.White;
-            this.tbSrc.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tbSrc.ForeColor = System.Drawing.Color.RoyalBlue;
-            this.tbSrc.Location = new System.Drawing.Point(130, 12);
-            this.tbSrc.Name = "tbSrc";
-            this.tbSrc.Size = new System.Drawing.Size(680, 21);
-            this.tbSrc.TabIndex = 16;
-            this.tbSrc.Text = "src";
-            this.tbSrc.TextChanged += new System.EventHandler(this.txtName_TextChanged);
             // 
             // FormMain
             // 
@@ -543,8 +551,10 @@
             this.panelTop.ResumeLayout(false);
             this.panelBottom.ResumeLayout(false);
             this.panelBottom.PerformLayout();
-            this.panelPhone.ResumeLayout(false);
-            this.panelPhone.PerformLayout();
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.tabControl.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
@@ -567,8 +577,6 @@
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
         private System.Windows.Forms.Button buttonMakeBigImageCss;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
-        private System.Windows.Forms.Button buttonHRange;
-        private System.Windows.Forms.Button buttonVRange;
         private System.Windows.Forms.ComboBox comboBoxImgType;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtSass;
@@ -591,15 +599,19 @@
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.TextBox txtBase64Sass;
         private System.Windows.Forms.TextBox txtBase64Css;
-        private System.Windows.Forms.Panel panelPhone;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.LinkLabel linkLabelHelp;
-        private System.Windows.Forms.LinkLabel linkLabelLess;
-        private System.Windows.Forms.LinkLabel linkLabelSass;
         private System.Windows.Forms.TextBox tbPrefix;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox tbSrc;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.RadioButton rdOrderByName;
+        private System.Windows.Forms.RadioButton rdOrderBySize;
+        private System.Windows.Forms.RadioButton rdVertical;
+        private System.Windows.Forms.RadioButton rdHorizon;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.CheckBox cbAlign;
+        private System.Windows.Forms.LinkLabel lkRecent;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }
 

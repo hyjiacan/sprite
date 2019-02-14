@@ -14,6 +14,15 @@ namespace CssSprite
         [XmlAttribute("ClassPrefix")]
         public string ClassPrefix { get; set; }
 
+        [XmlAttribute("OrderBy")]
+        public string OrderBy { get; set; }
+
+        [XmlAttribute("Align")]
+        public string Align { get; set; }
+
+        [XmlAttribute("AutoAlign")]
+        public bool AutoAlign { get; set; }
+
         [XmlAttribute("ImageName")]
         public string ImageName { get; set; }
 

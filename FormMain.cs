@@ -14,6 +14,7 @@ using System.Drawing.Drawing2D;
 using System.Collections;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Linq;
 
 namespace CssSprite
 {
@@ -22,6 +23,7 @@ namespace CssSprite
         private List<ImageInfo> _imgList;
         private string dialogFile = string.Empty;
         private string basePath;
+        private Option option;
         internal class ImageInfo
         {
             internal ImageInfo(Image img, string name, string fileName)
@@ -48,6 +50,9 @@ namespace CssSprite
             panelImages.KeyDown += panelImages_KeyDown;
             panelImages.LostFocus += panelImages_LostFocus;
             comboBoxImgType.DropDownStyle = ComboBoxStyle.DropDownList;
+
+            option = Option.Load();
+            lkRecent.Text = option.RecentSprite;
         }
 
         void panelImages_LostFocus(object sender, EventArgs e)
@@ -281,11 +286,10 @@ namespace CssSprite
             DialogResult dr = openFileDialog.ShowDialog();
             if (DialogResult.OK == dr && openFileDialog.FileNames.Length > 0)
             {
-                if (!AssertFiles())
+                if (string.IsNullOrEmpty(basePath))
                 {
-                    return;
+                    basePath = Path.GetDirectoryName(openFileDialog.FileName);
                 }
-                basePath = Path.GetDirectoryName(openFileDialog.FileName);
                 folderBrowserDialog.SelectedPath = basePath;
                 LoadImages(openFileDialog.FileNames);
                 ButtonVRange_Click(null, EventArgs.Empty);
@@ -302,52 +306,64 @@ namespace CssSprite
             DialogResult dr = openFileDialog.ShowDialog();
             if (DialogResult.OK == dr && openFileDialog.FileNames.Length > 0)
             {
-                basePath = Path.GetDirectoryName(openFileDialog.FileName);
-                folderBrowserDialog.SelectedPath = basePath;
-                var spriteFile = new SpriteFile();
-                try
+                LoadSprite(openFileDialog.FileName);
+            }
+        }
+
+        private void LoadSprite(string filename)
+        {
+            basePath = Path.GetDirectoryName(filename);
+            folderBrowserDialog.SelectedPath = basePath;
+            var spriteFile = new SpriteFile();
+            try
+            {
+                spriteFile = (SpriteFile)XmlSerializer.LoadFromXml(filename, spriteFile.GetType());
+                if (_imgList == null)
                 {
-                    spriteFile = (SpriteFile)XmlSerializer.LoadFromXml(openFileDialog.FileNames[0], spriteFile.GetType());
-                    if (_imgList == null)
-                    {
-                        _imgList = new List<ImageInfo>();
-                    }
-                    var noFile = "这些文件不存在：" + Environment.NewLine;
-                    var hasFile = false;
-                    foreach (Sprite s in spriteFile.SpriteList)
-                    {
-                        var path = Path.Combine(basePath, spriteFile.SrcPath, s.Path);
-                        if (File.Exists(path))
-                        {
-                            Image img = Image.FromFile(path);
-                            string imgName = Path.GetFileNameWithoutExtension(s.Path);
-                            ImageInfo imgInfo = new ImageInfo(img, imgName, path);
-                            img.Tag = imgInfo;
-                            _imgList.Add(imgInfo);
-                            AddPictureBox(img, s.LocationX, s.LocationY);
-                        }
-                        else
-                        {
-                            hasFile = true;
-                            noFile += path + Environment.NewLine;
-                        }
-                    }
-                    if (hasFile)
-                    {
-                        MessageBox.Show(noFile, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                    tbPrefix.Text = spriteFile.ClassPrefix;
-                    txtName.Text = spriteFile.ImageName;
-                    chkBoxPhone.Checked = spriteFile.IsPhone;
-                    comboBoxImgType.Text = spriteFile.SpriteImgFileType == null ? "png" : spriteFile.SpriteImgFileType;
-                    panelImages.ResumeLayout(false);
-                    SetCssText();
-                    SetBase64();
+                    _imgList = new List<ImageInfo>();
+                } else {
+                  _imgList.Clear();
                 }
-                catch (Exception ex)
+                var noFile = "这些文件不存在：" + Environment.NewLine;
+                var hasFile = false;
+                foreach (Sprite s in spriteFile.SpriteList)
                 {
-                    MessageBox.Show(ex.Message + Environment.NewLine + ".sprite文件被损坏，无法打开！");
+                    var path = Path.Combine(basePath, spriteFile.SrcPath, s.Path);
+                    if (File.Exists(path))
+                    {
+                        Image img = Image.FromStream(new MemoryStream(File.ReadAllBytes(path)));
+                        string imgName = Path.GetFileNameWithoutExtension(s.Path);
+                        ImageInfo imgInfo = new ImageInfo(img, imgName, path);
+                        img.Tag = imgInfo;
+                        _imgList.Add(imgInfo);
+                        AddPictureBox(img, s.LocationX, s.LocationY, imgInfo.Name);
+                    }
+                    else
+                    {
+                        hasFile = true;
+                        noFile += path + Environment.NewLine;
+                    }
                 }
+                if (hasFile)
+                {
+                    MessageBox.Show(noFile, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                tbPrefix.Text = spriteFile.ClassPrefix;
+                txtName.Text = spriteFile.ImageName;
+                chkBoxPhone.Checked = spriteFile.IsPhone;
+                cbAlign.Checked = spriteFile.AutoAlign;
+                rdHorizon.Checked = spriteFile.Align == "horizon";
+                rdOrderByName.Checked = spriteFile.OrderBy == "name";
+                comboBoxImgType.Text = spriteFile.SpriteImgFileType == null ? "png" : spriteFile.SpriteImgFileType;
+                panelImages.ResumeLayout(false);
+                SetCssText();
+                SetBase64();
+                option.RecentSprite = filename;
+                option.Save();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine + ".sprite文件被损坏，无法打开！");
             }
         }
 
@@ -366,12 +382,12 @@ namespace CssSprite
 
                 if (!IsImgExists(fileName))
                 {
-                    Image img = Image.FromFile(fileName);
+                    Image img = Image.FromStream(new MemoryStream(File.ReadAllBytes(fileName)));
                     string imgName = Path.GetFileNameWithoutExtension(fileName);
                     ImageInfo imgInfo = new ImageInfo(img, imgName, fileName);
                     img.Tag = imgInfo;
                     _imgList.Add(imgInfo);
-                    AddPictureBox(img, 0, 0);
+                    AddPictureBox(img, 0, 0, imgInfo.Name);
                     SetBase64();
                 }
             }
@@ -409,20 +425,7 @@ namespace CssSprite
         /// </summary>
         /// <param name="spriteFile"></param>
         private bool OpenFile(bool spriteFile)
-        {
-            if (_imgList != null && _imgList.Count > 0)
-            {
-                DialogResult queryDr = MessageBox.Show("确实要重新选择图片吗？重新选择图片，当前的图片布局将丢失。", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (queryDr == DialogResult.Yes)
-                {
-                    _imgList.Clear();
-                    panelImages.Controls.Clear();
-                }
-                else
-                {
-                    return false;
-                }
-            }
+        {            
             if (spriteFile)
             {
                 openFileDialog.Filter = "css sprite文件|*.sprite";
@@ -452,18 +455,12 @@ namespace CssSprite
                 {
                     continue;
                 }
-                Image img = Image.FromFile(fileName);
+                Image img = Image.FromStream(new MemoryStream(File.ReadAllBytes(fileName)));
                 string imgName = Path.GetFileNameWithoutExtension(fileName);
                 ImageInfo imgInfo = new ImageInfo(img, imgName, fileName);
                 img.Tag = imgInfo;
                 _imgList.Add(imgInfo);
             }
-            _imgList.Sort(ImageComparison);
-        }
-
-        int ImageComparison(ImageInfo i1, ImageInfo i2)
-        {
-            return i1.Image.Width > i2.Image.Width ? 1 : (i1.Image.Width == i2.Image.Width ? 0 : -1);
         }
 
         /// <summary>
@@ -494,28 +491,6 @@ namespace CssSprite
                 return ext;
             }
             return "png";
-        }
-
-
-        //小图横排点击
-        private void ButtonVRange_Click(object sender, EventArgs e)
-        {
-            if (!AssertFiles()) return;
-            panelImages.Controls.Clear();
-            int left = 0;
-            int top = 0;
-            int currentHeight = 0;
-            foreach (ImageInfo ii in _imgList)
-            {
-                Image img = ii.Image;
-                left = 0;
-                top = currentHeight;
-
-                AddPictureBox(img, left, top);
-                currentHeight += img.Height;
-            }
-            panelImages.ResumeLayout(false);
-            SetCssText();
         }
 
         /// <summary>
@@ -693,7 +668,7 @@ namespace CssSprite
         /// <param name="img">图片</param>
         /// <param name="left">左边</param>
         /// <param name="top">上边</param>
-        private void AddPictureBox(Image img, int left, int top)
+        private void AddPictureBox(Image img, int left, int top, string name)
         {
             PictureBox pb = new PictureBox();
             pb.Image = img;
@@ -706,6 +681,7 @@ namespace CssSprite
             pb.MouseDown += pb_MouseDown;
             pb.MouseMove += pb_MouseMove;
             pb.MouseUp += pb_MouseUp;
+            toolTip.SetToolTip(pb, name);
             //pb.Paint += pb_Paint;
             panelImages.Controls.Add(pb);
             pb.Show();
@@ -867,7 +843,10 @@ namespace CssSprite
                         SpriteList = new List<Sprite>(),
                         IsPhone = chkBoxPhone.Checked,
                         SpriteImgFileType = comboBoxImgType.Text,
-                        ClassPrefix = tbPrefix.Text
+                        ClassPrefix = tbPrefix.Text,
+                        AutoAlign = cbAlign.Checked,
+                        Align = rdHorizon.Checked ? "horizon" : "vertical",
+                        OrderBy = rdOrderByName.Checked ? "name" : "size"
                     };
                     try
                     {
@@ -888,12 +867,18 @@ namespace CssSprite
                             };
                             sprite.SpriteList.Add(s);
                             g.DrawImage(pb.Image, pb.Location.X - minWidth, pb.Location.Y - minHeight, pb.Image.Width, pb.Image.Height);
-                            if (Path.GetDirectoryName(path) != folderBrowserDialog.SelectedPath)
+                            
+                            var destFile = Path.Combine(outputPath, Path.GetFileName(path));
+                            if (Path.GetDirectoryName(path) != outputPath && path != destFile)
                             {
-                                File.Copy(path, Path.Combine(outputPath, Path.GetFileName(path)), false);
+                                File.Copy(path, destFile, true);
                             }
                         }
-                        XmlSerializer.SaveToXml(folderBrowserDialog.SelectedPath + "\\" + txtName.Text + ".sprite", sprite);
+                        var file = folderBrowserDialog.SelectedPath + "\\" + txtName.Text + ".sprite";
+                        XmlSerializer.SaveToXml(file, sprite);
+
+                        option.RecentSprite = file;
+                        option.Save();
                     }
                     catch (Exception ex)
                     {
@@ -948,20 +933,122 @@ namespace CssSprite
             SetCssText();
         }
 
+        private List<ImageInfo> GetOrderedImageList()
+        {
+            if (rdOrderByName.Checked)
+            {
+                return _imgList.OrderBy(img => img.FileName).ToList();
+            }
+
+            return _imgList.OrderBy(img => img.Image.Width).ToList();
+        }
+
+        private void ResumeLayout(object sender, EventArgs e)
+        {
+            if (rdHorizon.Checked)
+            {
+                buttonHRange_Click(null, null);
+            }
+            else
+            {
+                ButtonVRange_Click(null, null);
+            }
+        }
+
+        const int OFFSET = 5;
+
         //小图横排点击
         private void buttonHRange_Click(object sender, EventArgs e)
         {
-            if (!AssertFiles()) return;
             panelImages.Controls.Clear();
             int left = 0;
             int top = 0;
-            foreach (ImageInfo ii in _imgList)
+            int prevWidth = 0;
+            int prevHeight = 0;
+            List<ImageInfo> list = GetOrderedImageList();
+            for (int i = 0; i < list.Count; i++)
             {
+                ImageInfo ii = list[i];
                 Image img = ii.Image;
-                AddPictureBox(img, left, top);
-                left += img.Width;
+                if (cbAlign.Checked)
+                {
+                    if (img.Width != prevWidth)
+                    {
+                        top = 0;
+                    }
+                    else
+                    {
+                        top += prevHeight + OFFSET;
+                    }
+                }
+                AddPictureBox(img, left, top, ii.Name);
+                if (cbAlign.Checked)
+                {
+                    if (i < list.Count - 1)
+                    {
+                        prevWidth = img.Width;
+                        prevHeight = img.Height;
+                        var next = list[i + 1];
+                        if (next.Image.Width != prevWidth)
+                        {
+                            left += img.Width + OFFSET;
+                        }
+                    }
+                }
+                else
+                {
+                    left += img.Width + OFFSET;
+                }
             }
 
+            panelImages.ResumeLayout(false);
+            SetCssText();
+        }
+
+
+        //小图竖排点击
+        private void ButtonVRange_Click(object sender, EventArgs e)
+        {
+            panelImages.Controls.Clear();
+            int left = 0;
+            int top = 0;
+            int prevWidth = 0;
+            int prevHeight = 0;
+            List<ImageInfo> list = GetOrderedImageList();
+            for (int i = 0; i < list.Count; i++)
+            {
+                ImageInfo ii = list[i];
+                Image img = ii.Image;
+                if (cbAlign.Checked)
+                {
+                    if (img.Height != prevHeight)
+                    {
+                        left = 0;
+                    }
+                    else
+                    {
+                        left += prevWidth + OFFSET;
+                    }
+                }
+                AddPictureBox(img, left, top, ii.Name);
+                if (cbAlign.Checked)
+                {
+                    if (i < list.Count - 1)
+                    {
+                        prevWidth = img.Width;
+                        prevHeight = img.Height;
+                        var next = list[i + 1];
+                        if (next.Image.Height != prevHeight)
+                        {
+                            top += img.Height + OFFSET;
+                        }
+                    }
+                }
+                else
+                {
+                    top += img.Height + OFFSET;
+                }
+            }
             panelImages.ResumeLayout(false);
             SetCssText();
         }
@@ -971,7 +1058,6 @@ namespace CssSprite
         {
             if (chkBoxPhone.Checked)
             {
-                panelPhone.Visible = true;
                 _list = new List<PictureBox>();
                 foreach (PictureBox pb in panelImages.Controls)
                 {
@@ -1047,10 +1133,6 @@ namespace CssSprite
                     top++;
                 }
             }
-            else
-            {
-                panelPhone.Visible = false;
-            }
             if (sender != null)
             {
                 SetCssText();
@@ -1102,19 +1184,14 @@ namespace CssSprite
             SetCssText();
         }
 
-        private void linkLabelHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void LkRecent_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("http://www.cnblogs.com/wang4517/archive/2015/05/19/4514862.html");
-        }
-
-        private void linkLabelSass_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            Process.Start("https://csssprite.herokuapp.com/sassVar");
-        }
-
-        private void linkLabelLess_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            Process.Start("https://csssprite.herokuapp.com/lessVar");
+            var filename = lkRecent.Text;
+            if (string.IsNullOrWhiteSpace((filename)))
+            {
+                return;
+            }
+            LoadSprite(filename);
         }
     }
 }
