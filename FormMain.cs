@@ -1,46 +1,28 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Drawing.Imaging;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Globalization;
 using System.Drawing.Drawing2D;
-using System.Collections;
-using System.Threading;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
 
 namespace CssSprite
 {
     public partial class FormMain : Form
     {
-        private List<ImageInfo> _imgList;
-        private string dialogFile = string.Empty;
+        private List<ImageInfo> ImgList;
         private string basePath;
         private Option option;
-        internal class ImageInfo
-        {
-            internal ImageInfo(Image img, string name, string fileName)
-            {
-                Image = img;
-                Name = name;
-                FileName = fileName;
-            }
-
-            internal readonly Image Image;
-            internal readonly string Name;
-            internal readonly string FileName;
-        }
+        private Logger logger;
 
         public FormMain()
         {
             InitializeComponent();
+        }
+
+        private void FormMain_Load(object sender, EventArgs e)
+        {
             panelImages.MouseWheel += panelImages_MouseWheel;
             panelImages.MouseHover += panelImages_MouseHover;
             panelImages.MouseDown += panelImages_MouseDown;
@@ -52,82 +34,46 @@ namespace CssSprite
             comboBoxImgType.DropDownStyle = ComboBoxStyle.DropDownList;
 
             option = Option.Load();
-            lkRecent.Text = option.RecentSprite;
+            logger = new Logger(tLogs);
+
+            option.RecentProjects.ForEach(project =>
+            {
+                var link = new LinkLabel
+                {
+                    Text = project,
+                    AutoEllipsis = true,
+                    AutoSize = false,
+                    Width = recentList.Width
+                };
+                link.LinkClicked += LkRecent_LinkClicked;
+                toolTip.SetToolTip(link, project);
+                recentList.Controls.Add(link);
+            });
         }
 
+        #region 鼠标和键盘支持
         void panelImages_LostFocus(object sender, EventArgs e)
         {
             list = null;
         }
 
-        Point keyDownPoint;
         void panelImages_KeyDown(object sender, KeyEventArgs e)
         {
-            if ((_selectedPicture != null && list == null) || (_selectedPicture != null && list.Count == 0))
+            if (SelectedPicture != null && (list == null || list.Count == 0))
             {
-                keyDownPoint = new Point(_selectedPicture.Location.X, _selectedPicture.Location.Y);
-                switch (e.KeyCode)
-                {
-                    case Keys.Left:
-                        if (keyDownPoint.X > 0)
-                        {
-                            keyDownPoint.X -= 1;
-                        }
-                        break;
-                    case Keys.Up:
-                        if (keyDownPoint.Y > 0)
-                        {
-                            keyDownPoint.Y -= 1;
-                        }
-                        break;
-                    case Keys.Down:
-                        keyDownPoint.Y += 1;
-                        break;
-                    case Keys.Right:
-                        keyDownPoint.X += 1;
-                        break;
-                }
-                _selectedPicture.Location = keyDownPoint;
+                Util.MakePictureOffset(SelectedPicture, e.KeyCode);
+                SetCssText();
             }
-            else if (list != null)
+
+            if (list == null)
             {
-                foreach (PictureBox pb in list)
-                {
-                    keyDownPoint = new Point(pb.Location.X, pb.Location.Y);
-                    switch (e.KeyCode)
-                    {
-                        case Keys.Left:
-                            if (keyDownPoint.X > 0)
-                            {
-                                keyDownPoint.X -= 1;
-                            }
-                            else
-                            {
-                                return;
-                            }
-                            break;
-                        case Keys.Up:
-                            if (keyDownPoint.Y > 0)
-                            {
-                                keyDownPoint.Y -= 1;
-                            }
-                            else
-                            {
-                                return;
-                            }
-                            break;
-                        case Keys.Down:
-                            keyDownPoint.Y += 1;
-                            break;
-                        case Keys.Right:
-                            keyDownPoint.X += 1;
-                            break;
-                    }
-                    pb.Location = keyDownPoint;
-                }
-                DrawRectangle(list);
+                return;
             }
-            SetCssText();
+            foreach (PictureBox pb in list)
+            {
+                Util.MakePictureOffset(pb, e.KeyCode);
+            }
+            DrawRectangle(list);
         }
 
         private delegate void EnableButtonCallBack();
@@ -135,15 +81,15 @@ namespace CssSprite
         /// <summary>
         /// 鼠标的初始位置
         /// </summary>
-        Point _panelPoint;
+        Point MouseDownPosition;
         /// <summary>
         /// 是否在拖动
         /// </summary>
-        bool _isSelect = false;
+        bool IsDragging = false;
         /// <summary>
         /// 画笔
         /// </summary>
-        Graphics g;
+        Graphics graphics;
         /// <summary>
         /// 颜色笔
         /// </summary>
@@ -158,79 +104,81 @@ namespace CssSprite
         List<PictureBox> list;
         void panelImages_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button != MouseButtons.Left)
             {
-                list = null;
-                pen = new Pen(Color.Blue);
-                g = panelImages.CreateGraphics();
-                _panelPoint = new Point(e.X, e.Y);
-                _isSelect = true;
-                area = new Area();
+                IsDragging = false;
+                return;
             }
-            else
-            {
-                _isSelect = false;
-            }
+            list = null;
+            pen = new Pen(Color.Blue);
+            graphics = panelImages.CreateGraphics();
+            MouseDownPosition = new Point(e.X, e.Y);
+            area = new Area();
+            IsDragging = true;
         }
 
         void panelImages_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_isSelect && list == null)
+            if (!IsDragging || list != null)
             {
-                panelImages.Refresh();
-                if (e.X > _panelPoint.X && e.Y > _panelPoint.Y)
-                {
-                    area.ZeroPoint = new Point(_panelPoint.X, _panelPoint.Y);
-                    area.Height = e.Y - _panelPoint.Y;
-                    area.Width = e.X - _panelPoint.X;
-                }
-                else if (e.X < _panelPoint.X && e.Y < _panelPoint.Y)
-                {
-                    area.ZeroPoint = new Point(e.X, e.Y);
-                    area.Height = _panelPoint.Y - e.Y;
-                    area.Width = _panelPoint.X - e.X;
-                }
-                else if (e.X < _panelPoint.X && e.Y > _panelPoint.Y)
-                {
-                    area.ZeroPoint = new Point(e.X, _panelPoint.Y);
-                    area.Width = _panelPoint.X - e.X;
-                    area.Height = e.Y - _panelPoint.Y;
-                }
-                else
-                {
-                    area.ZeroPoint = new Point(_panelPoint.X, e.Y);
-                    area.Width = e.X - _panelPoint.X;
-                    area.Height = _panelPoint.Y - e.Y;
-                }
-                g.DrawRectangle(pen, area.ZeroPoint.X, area.ZeroPoint.Y, area.Width, area.Height);
+                return;
             }
-            else if (_isSelect && list != null)
+            panelImages.Refresh();
+            if (e.X > MouseDownPosition.X && e.Y > MouseDownPosition.Y)
             {
-
+                area.ZeroPoint = new Point(MouseDownPosition.X, MouseDownPosition.Y);
+                area.Height = e.Y - MouseDownPosition.Y;
+                area.Width = e.X - MouseDownPosition.X;
             }
+            else if (e.X < MouseDownPosition.X && e.Y < MouseDownPosition.Y)
+            {
+                area.ZeroPoint = new Point(e.X, e.Y);
+                area.Height = MouseDownPosition.Y - e.Y;
+                area.Width = MouseDownPosition.X - e.X;
+            }
+            else if (e.X < MouseDownPosition.X && e.Y > MouseDownPosition.Y)
+            {
+                area.ZeroPoint = new Point(e.X, MouseDownPosition.Y);
+                area.Width = MouseDownPosition.X - e.X;
+                area.Height = e.Y - MouseDownPosition.Y;
+            }
+            else
+            {
+                area.ZeroPoint = new Point(MouseDownPosition.X, e.Y);
+                area.Width = e.X - MouseDownPosition.X;
+                area.Height = MouseDownPosition.Y - e.Y;
+            }
+            graphics.DrawRectangle(pen, area.ZeroPoint.X, area.ZeroPoint.Y, area.Width, area.Height);
         }
 
         void panelImages_MouseUp(object sender, MouseEventArgs e)
         {
-            if (_isSelect)
+            if (!IsDragging)
             {
-                _isSelect = false;
-                list = new List<PictureBox>();
-
-                foreach (PictureBox pb in panelImages.Controls)
-                {
-                    if (pb.Location.X > area.ZeroPoint.X && pb.Location.Y > area.ZeroPoint.Y &&
-                        pb.Location.X + pb.Width < area.ZeroPoint.X + area.Width &&
-                        pb.Location.Y + pb.Height < area.ZeroPoint.Y + area.Height
-                        )
-                    {
-                        list.Add(pb);
-                    }
-                }
-                DrawRectangle(list);
+                return;
             }
+            IsDragging = false;
+            list = panelImages.Controls.Cast<PictureBox>().Where(pb =>
+                    pb.Location.X > area.ZeroPoint.X && pb.Location.Y > area.ZeroPoint.Y &&
+                    pb.Location.X + pb.Width < area.ZeroPoint.X + area.Width &&
+                    pb.Location.Y + pb.Height < area.ZeroPoint.Y + area.Height)
+                .Select(pb => pb).ToList();
+            DrawRectangle(list);
         }
 
+        void panelImages_MouseHover(object sender, EventArgs e)
+        {
+            panelImages.Focus();
+        }
+
+        void panelImages_MouseWheel(object sender, MouseEventArgs e)
+        {
+            panelImages.ResumeLayout(false);
+            panelImages.Refresh();
+        }
+
+
+        #endregion
         /// <summary>
         /// 重绘矩形边框
         /// </summary>
@@ -239,7 +187,7 @@ namespace CssSprite
         {
             var size = GetEdgeSize(list);
             panelImages.Refresh();
-            g.DrawRectangle(pen, size.MinWidth, size.MinHeight, size.MaxWidth - size.MinWidth, size.MaxHeight - size.MinHeight);
+            graphics.DrawRectangle(pen, size.MinWidth, size.MinHeight, size.MaxWidth - size.MinWidth, size.MaxHeight - size.MinHeight);
         }
 
         /// <summary>
@@ -264,19 +212,6 @@ namespace CssSprite
             }
             return size;
         }
-
-        void panelImages_MouseHover(object sender, EventArgs e)
-        {
-            panelImages.Focus();
-        }
-
-        void panelImages_MouseWheel(object sender, MouseEventArgs e)
-        {
-            panelImages.ResumeLayout(false);
-            panelImages.Refresh();
-        }
-
-
         private void buttonBrowse_Click(object sender, EventArgs e)
         {
             if (!OpenFile(false))
@@ -290,7 +225,6 @@ namespace CssSprite
                 {
                     basePath = Path.GetDirectoryName(openFileDialog.FileName);
                 }
-                folderBrowserDialog.SelectedPath = basePath;
                 LoadImages(openFileDialog.FileNames);
                 ButtonVRange_Click(null, EventArgs.Empty);
                 SetBase64();
@@ -312,31 +246,33 @@ namespace CssSprite
 
         private void LoadSprite(string filename)
         {
+            Text = $"项目文件: {filename}";
             basePath = Path.GetDirectoryName(filename);
-            folderBrowserDialog.SelectedPath = basePath;
-            var spriteFile = new SpriteFile();
+            saveFileDialog.FileName = filename;
             try
             {
-                spriteFile = (SpriteFile)XmlSerializer.LoadFromXml(filename, spriteFile.GetType());
-                if (_imgList == null)
+                var spriteFile = Json.Decode<SpriteFile>(File.ReadAllText(filename));
+                if (ImgList == null)
                 {
-                    _imgList = new List<ImageInfo>();
-                } else {
-                  _imgList.Clear();
+                    ImgList = new List<ImageInfo>();
+                }
+                else
+                {
+                    ImgList.Clear();
                 }
                 var noFile = "这些文件不存在：" + Environment.NewLine;
                 var hasFile = false;
-                foreach (Sprite s in spriteFile.SpriteList)
+                foreach (SpriteImage s in spriteFile.Images)
                 {
-                    var path = Path.Combine(basePath, spriteFile.SrcPath, s.Path);
+                    var path = Path.Combine(basePath, spriteFile.SrcPath, s.File);
                     if (File.Exists(path))
                     {
                         Image img = Image.FromStream(new MemoryStream(File.ReadAllBytes(path)));
-                        string imgName = Path.GetFileNameWithoutExtension(s.Path);
+                        string imgName = Path.GetFileNameWithoutExtension(s.File);
                         ImageInfo imgInfo = new ImageInfo(img, imgName, path);
                         img.Tag = imgInfo;
-                        _imgList.Add(imgInfo);
-                        AddPictureBox(img, s.LocationX, s.LocationY, imgInfo.Name);
+                        ImgList.Add(imgInfo);
+                        AddPictureBox(img, s.X, s.Y, imgInfo.Name);
                     }
                     else
                     {
@@ -346,7 +282,7 @@ namespace CssSprite
                 }
                 if (hasFile)
                 {
-                    MessageBox.Show(noFile, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    logger.Warn(noFile);
                 }
                 tbPrefix.Text = spriteFile.ClassPrefix;
                 txtName.Text = spriteFile.ImageName;
@@ -354,16 +290,15 @@ namespace CssSprite
                 cbAlign.Checked = spriteFile.AutoAlign;
                 rdHorizon.Checked = spriteFile.Align == "horizon";
                 rdOrderByName.Checked = spriteFile.OrderBy == "name";
-                comboBoxImgType.Text = spriteFile.SpriteImgFileType == null ? "png" : spriteFile.SpriteImgFileType;
+                comboBoxImgType.Text = spriteFile.FileType == null ? "png" : spriteFile.FileType;
                 panelImages.ResumeLayout(false);
                 SetCssText();
                 SetBase64();
-                option.RecentSprite = filename;
-                option.Save();
+                option.AppendProject(filename).Save();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + Environment.NewLine + ".sprite文件被损坏，无法打开！");
+                logger.Error(ex.Message + Environment.NewLine + "项目文件被损坏，无法打开！");
             }
         }
 
@@ -372,51 +307,50 @@ namespace CssSprite
             openFileDialog.Filter = "Png文件|*.png|Jpeg文件|*.jpeg|Jpg文件|*.jpg";
             openFileDialog.Multiselect = false;
             DialogResult dr = openFileDialog.ShowDialog();
-            if (DialogResult.OK == dr && openFileDialog.FileNames.Length > 0)
+            if (DialogResult.OK != dr || openFileDialog.FileNames.Length == 0)
             {
-                if (_imgList == null)
-                {
-                    _imgList = new List<ImageInfo>();
-                }
-                var fileName = openFileDialog.FileName;
+                return;
+            }
+            if (ImgList == null)
+            {
+                ImgList = new List<ImageInfo>();
+            }
+            var fileName = openFileDialog.FileName;
 
-                if (!IsImgExists(fileName))
-                {
-                    Image img = Image.FromStream(new MemoryStream(File.ReadAllBytes(fileName)));
-                    string imgName = Path.GetFileNameWithoutExtension(fileName);
-                    ImageInfo imgInfo = new ImageInfo(img, imgName, fileName);
-                    img.Tag = imgInfo;
-                    _imgList.Add(imgInfo);
-                    AddPictureBox(img, 0, 0, imgInfo.Name);
-                    SetBase64();
-                }
+            if (!IsImgExists(fileName))
+            {
+                Image img = Image.FromStream(new MemoryStream(File.ReadAllBytes(fileName)));
+                string imgName = Path.GetFileNameWithoutExtension(fileName);
+                ImageInfo imgInfo = new ImageInfo(img, imgName, fileName);
+                img.Tag = imgInfo;
+                ImgList.Add(imgInfo);
+                AddPictureBox(img, 0, 0, imgInfo.Name);
+                SetBase64();
             }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (_selectedPicture != null)
+            if (SelectedPicture == null)
             {
-                var dr = MessageBox.Show("确定删除图片：" + ((ImageInfo)_selectedPicture.Image.Tag).Name + " ？", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (dr == DialogResult.Yes)
-                {
-                    foreach (ImageInfo info in _imgList)
-                    {
-                        if (info.Image == _selectedPicture.Image)
-                        {
-                            _imgList.Remove(info);
-                            break;
-                        }
-                    }
-                    panelImages.Controls.Remove(_selectedPicture);
-                    _selectedPicture = null;
-                    SetCssText();
-                    SetBase64();
-                }
+                logger.Warn("请选中你需要移除的图片！");
+                return;
             }
-            else
+            var dr = MessageBox.Show("确定删除图片：" + ((ImageInfo)SelectedPicture.Image.Tag).Name + " ？", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr == DialogResult.Yes)
             {
-                MessageBox.Show("请选中你需要移除的图片！");
+                foreach (ImageInfo info in ImgList)
+                {
+                    if (info.Image == SelectedPicture.Image)
+                    {
+                        ImgList.Remove(info);
+                        break;
+                    }
+                }
+                panelImages.Controls.Remove(SelectedPicture);
+                SelectedPicture = null;
+                SetCssText();
+                SetBase64();
             }
         }
 
@@ -425,10 +359,10 @@ namespace CssSprite
         /// </summary>
         /// <param name="spriteFile"></param>
         private bool OpenFile(bool spriteFile)
-        {            
+        {
             if (spriteFile)
             {
-                openFileDialog.Filter = "css sprite文件|*.sprite";
+                openFileDialog.Filter = "精灵图文件|*.sprite";
                 openFileDialog.Multiselect = false;
             }
             else
@@ -445,9 +379,9 @@ namespace CssSprite
         /// <param name="imageFileNames"></param>
         private void LoadImages(string[] imageFileNames)
         {
-            if (_imgList == null)
+            if (ImgList == null)
             {
-                _imgList = new List<ImageInfo>();
+                ImgList = new List<ImageInfo>();
             }
             foreach (string fileName in imageFileNames)
             {
@@ -459,38 +393,19 @@ namespace CssSprite
                 string imgName = Path.GetFileNameWithoutExtension(fileName);
                 ImageInfo imgInfo = new ImageInfo(img, imgName, fileName);
                 img.Tag = imgInfo;
-                _imgList.Add(imgInfo);
+                ImgList.Add(imgInfo);
             }
-        }
-
-        /// <summary>
-        /// 验证是否是多个文件
-        /// </summary>
-        /// <returns></returns>
-        private bool AssertFiles()
-        {
-            string[] files = openFileDialog.FileNames;
-            if (files == null || (openFileDialog.Multiselect ? files.Length < 2 : files.Length < 0))
-            {
-                MessageBox.Show("请选择多个图片文件。");
-                return false;
-            }
-            return true;
         }
 
         /// <summary>
         /// 选中的单张图片
         /// </summary>
-        private PictureBox _selectedPicture = null;
+        private PictureBox SelectedPicture = null;
 
         string GetImgExt()
         {
             string ext = comboBoxImgType.Text.ToLower();
-            if (ext == "png" || ext == "gif" || ext == "jpg" || ext == "jpeg")
-            {
-                return ext;
-            }
-            return "png";
+            return ext == "png" || ext == "gif" || ext == "jpg" || ext == "jpeg" ? ext : "png";
         }
 
         /// <summary>
@@ -498,90 +413,40 @@ namespace CssSprite
         /// </summary>
         public void SetCssText()
         {
-            var _list = new List<PictureBox>();
+            var list = new List<PictureBox>();
             foreach (PictureBox pb in panelImages.Controls)
             {
-                _list.Add(pb);
+                list.Add(pb);
             }
-            var edgeSize = GetEdgeSize(_list);
-            var isPhone = chkBoxPhone.Checked;
+            var edgeSize = GetEdgeSize(list);
             var tmpStr = "{0}" + txtName.Text + "[background:url(" + txtName.Text + "." + GetImgExt() + ") no-repeat {1};]" + Environment.NewLine;
-
-            var sassStr = string.Empty;
-            var cssStr = string.Empty;
-
+            string sassStr;
+            string cssStr;
             if (chkBoxPhone.Checked)
             {
                 chkBoxPhone_CheckedChanged(null, EventArgs.Empty);
-                sassStr = String.Format(tmpStr, "@mixin ", ";background-size:$_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("[", "{").Replace("]", "}");
-                cssStr = String.Format(tmpStr, ".", ";background-size:@_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("[", "{").Replace("]", "}");
+                sassStr = string.Format(tmpStr, "@mixin ", ";background-size:$_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("[", "{").Replace("]", "}");
+                cssStr = string.Format(tmpStr, ".", ";background-size:@_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("[", "{").Replace("]", "}");
             }
             else
             {
-                sassStr = String.Format(tmpStr, "@mixin ", "").Replace("[", "{").Replace("]", "}");
-                cssStr = String.Format(tmpStr, ".", "").Replace("[", "{").Replace("]", "}");
+                sassStr = string.Format(tmpStr, "@mixin ", "").Replace("[", "{").Replace("]", "}");
+                cssStr = string.Format(tmpStr, ".", "").Replace("[", "{").Replace("]", "}");
             }
 
             foreach (PictureBox pb in panelImages.Controls)
             {
-                sassStr += GetSassCss(pb.Image, pb.Left - edgeSize.MinWidth, pb.Top - edgeSize.MinHeight, true);
-                cssStr += GetSassCss(pb.Image, pb.Left - edgeSize.MinWidth, pb.Top - edgeSize.MinHeight, false);
+                sassStr += Util.GetSassCss(pb.Image, pb.Left - edgeSize.MinWidth, pb.Top - edgeSize.MinHeight, true, chkBoxPhone.Checked, tbPrefix.Text);
+                cssStr += Util.GetSassCss(pb.Image, pb.Left - edgeSize.MinWidth, pb.Top - edgeSize.MinHeight, false, chkBoxPhone.Checked, tbPrefix.Text);
             }
             txtSass.Text = sassStr;
             txtCss.Text = cssStr;
-        }
-
-        /// <summary>
-        /// 得到sass代码
-        /// </summary>
-        /// <param name="img">图片</param>
-        /// <param name="left">左边距离</param>
-        /// <param name="top">右边距离</param>
-        /// <returns></returns>
-        string GetSassCss(Image img, int left, int top, bool isSass)
-        {
-            ImageInfo imgInfo = (ImageInfo)img.Tag;
-            var isPhone = chkBoxPhone.Checked;
-            var unit = "px";
-            var sassPrefix = string.Empty;
-            var lessPrefix = string.Empty;
-            if (isPhone)
-            {
-                unit = "";
-                lessPrefix = "@_";
-                sassPrefix = "$_";
-            }
-            var _left = string.Empty;
-            var _top = string.Empty;
-
-            if (isSass || isPhone)
-            {
-                _left = left == 0 ? "0" : "0 " + "-{2}" + left.ToString() + unit;
-                _top = top == 0 ? "0" : "0 " + "-{2}" + top.ToString() + unit;
-            }
-            else
-            {
-                _left = left == 0 ? "0" : (0 - left).ToString() + unit;
-                _top = top == 0 ? "0" : (0 - top).ToString() + unit;
-            }
-            var imgHeight = isPhone ? img.Height.ToString() : img.Height.ToString() + unit;
-            var imgWidth = isPhone ? img.Width.ToString() : img.Width.ToString() + unit;
-            var str = "{0}" + tbPrefix.Text + GetCssName(imgInfo.Name) + "[height:{1}" + imgHeight + ";width:{1}" + imgWidth + ";" + "background-position:" + _left + " " + _top + ";]" + Environment.NewLine;
-            if (isSass)
-            {
-                return String.Format(str, "@mixin ", sassPrefix, sassPrefix).Replace("[", "{").Replace("]", "}");
-            }
-            else
-            {
-                return String.Format(str, ".", lessPrefix, lessPrefix).Replace("[", "{").Replace("]", "}");
-            }
         }
 
         void SetBase64()
         {
             string base64Sass = string.Empty;
             string base64Css = string.Empty;
-            BinaryFormatter binFormatter = new BinaryFormatter();
             ImageInfo imageInfo;
             int height, width;
             var isPhone = chkBoxPhone.Checked;
@@ -594,8 +459,7 @@ namespace CssSprite
                 lessPrefix = "@_";
                 sassPrefix = "$_";
             }
-            var _height = string.Empty;
-            var _width = string.Empty;
+
             foreach (PictureBox pb in panelImages.Controls)
             {
                 Bitmap bmp = new Bitmap(pb.Image, pb.Image.Width, pb.Image.Height);
@@ -628,38 +492,17 @@ namespace CssSprite
                 //height = isPhone ? height / 2 : height;
                 width = pb.Image.Width;
                 //width = isPhone ? width / 2 : width;
-                _height = height == 0 ? "0" : "{0}" + height.ToString() + unit;
-                _width = width == 0 ? "0" : "{0}" + width.ToString() + unit;
+                string _height = height == 0 ? "0" : "{0}" + height.ToString() + unit;
+                string _width = width == 0 ? "0" : "{0}" + width.ToString() + unit;
                 base64Sass += "@mixin ";
                 base64Css += ".";
-                var code = GetCssName(imageInfo.Name) + "[height:" + _height + ";width:" + _width + ";background:url(data:image/png;base64," + Convert.ToBase64String(arr) + ") no-repeat]" + Environment.NewLine;
-                base64Sass += String.Format(code, sassPrefix).Replace("[", "{").Replace("]", "}");
-                base64Css += String.Format(code, lessPrefix).Replace("[", "{").Replace("]", "}");
+                var code = Util.GetCssName(imageInfo.Name) + "[height:" + _height + ";width:" + _width + ";background:url(data:image/png;base64," + Convert.ToBase64String(arr) + ") no-repeat]" + Environment.NewLine;
+                base64Sass += string.Format(code, sassPrefix).Replace("[", "{").Replace("]", "}");
+                base64Css += string.Format(code, lessPrefix).Replace("[", "{").Replace("]", "}");
             }
 
             txtBase64Sass.Text = base64Sass;
             txtBase64Css.Text = base64Css;
-        }
-
-        string GetCssName(string imgName)
-        {
-            if (Char.IsNumber(imgName[0]))
-            {
-                return "_" + imgName;
-            }
-            return imgName;
-        }
-
-        public string GetImgName(Image img)
-        {
-            foreach (ImageInfo ii in _imgList)
-            {
-                if (ii.Image == img)
-                {
-                    return ii.Name;
-                }
-            }
-            return string.Empty;
         }
 
         /// <summary>
@@ -693,23 +536,24 @@ namespace CssSprite
             p.Tag = "1";
             p.Refresh();
             panelImages.Focus();
-            _selectedPicture = p;
+            SelectedPicture = p;
         }
 
         void pb_Paint(object sender, PaintEventArgs e)
         {
             PictureBox p = (PictureBox)sender;
-            if (p.Tag != null && p.Tag.ToString() == "1")
+            if (p.Tag == null || p.Tag.ToString() != "1")
             {
-                Pen pp = new Pen(Color.Blue);
-                e.Graphics.DrawRectangle(pp, e.ClipRectangle.X, e.ClipRectangle.Y, e.ClipRectangle.X + e.ClipRectangle.Width - 1, e.ClipRectangle.Y + e.ClipRectangle.Height - 1);
-                foreach (PictureBox pb in panelImages.Controls)
+                return;
+            }
+            Pen pp = new Pen(Color.Blue);
+            e.Graphics.DrawRectangle(pp, e.ClipRectangle.X, e.ClipRectangle.Y, e.ClipRectangle.X + e.ClipRectangle.Width - 1, e.ClipRectangle.Y + e.ClipRectangle.Height - 1);
+            foreach (PictureBox pb in panelImages.Controls)
+            {
+                if (pb != p)
                 {
-                    if (pb != p)
-                    {
-                        pb.Tag = null;
-                        pb.Refresh();
-                    }
+                    pb.Tag = null;
+                    pb.Refresh();
                 }
             }
         }
@@ -739,15 +583,13 @@ namespace CssSprite
 
         void pb_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
-            {
-                _isDragged = true;
-                _dragStartLocation = new Point(e.X, e.Y);
-            }
-            else
+            if (e.Button != MouseButtons.Left)
             {
                 _isDragged = false;
+                return;
             }
+            _isDragged = true;
+            _dragStartLocation = new Point(e.X, e.Y);
         }
 
 
@@ -757,22 +599,18 @@ namespace CssSprite
         {
             panelImages.VerticalScroll.Value = 0;
             panelImages.HorizontalScroll.Value = 0;
-            if (_imgList == null || _imgList.Count < 2)
+            if (ImgList == null || ImgList.Count < 2)
             {
-                MessageBox.Show("请选择多个背景图片。");
+                logger.Warn("请选择多个背景图片。");
                 return;
             }
 
-            DialogResult dr = folderBrowserDialog.ShowDialog();
+            DialogResult dr = saveFileDialog.ShowDialog();
             if (dr != DialogResult.OK)
             {
                 return;
             }
-            string imgDir = folderBrowserDialog.SelectedPath;
-            if (!Directory.Exists(imgDir))
-            {
-                Directory.CreateDirectory(imgDir);
-            }
+            string imgDir = Path.GetDirectoryName(saveFileDialog.FileName);
             string imgPath = Path.Combine(imgDir, txtName.Text + "." + GetImgExt());
             if (File.Exists(imgPath))
             {
@@ -840,9 +678,9 @@ namespace CssSprite
                     {
                         SrcPath = tbSrc.Text,
                         ImageName = txtName.Text,
-                        SpriteList = new List<Sprite>(),
+                        Images = new List<SpriteImage>(),
                         IsPhone = chkBoxPhone.Checked,
-                        SpriteImgFileType = comboBoxImgType.Text,
+                        FileType = comboBoxImgType.Text,
                         ClassPrefix = tbPrefix.Text,
                         AutoAlign = cbAlign.Checked,
                         Align = rdHorizon.Checked ? "horizon" : "vertical",
@@ -850,7 +688,7 @@ namespace CssSprite
                     };
                     try
                     {
-                        var outputPath = Path.Combine(folderBrowserDialog.SelectedPath, tbSrc.Text);
+                        var outputPath = Path.Combine(imgDir, tbSrc.Text);
                         if (!Directory.Exists(outputPath))
                         {
                             Directory.CreateDirectory(outputPath);
@@ -859,30 +697,30 @@ namespace CssSprite
                         {
                             var img = (ImageInfo)pb.Image.Tag;
                             var path = img.FileName;
-                            Sprite s = new Sprite()
+                            SpriteImage s = new SpriteImage()
                             {
-                                LocationY = pb.Location.Y,
-                                LocationX = pb.Location.X,
-                                Path = Path.GetFileName(path)
+                                Y = pb.Location.Y,
+                                X = pb.Location.X,
+                                File = Path.GetFileName(path)
                             };
-                            sprite.SpriteList.Add(s);
+                            sprite.Images.Add(s);
                             g.DrawImage(pb.Image, pb.Location.X - minWidth, pb.Location.Y - minHeight, pb.Image.Width, pb.Image.Height);
-                            
+
                             var destFile = Path.Combine(outputPath, Path.GetFileName(path));
                             if (Path.GetDirectoryName(path) != outputPath && path != destFile)
                             {
                                 File.Copy(path, destFile, true);
                             }
                         }
-                        var file = folderBrowserDialog.SelectedPath + "\\" + txtName.Text + ".sprite";
-                        XmlSerializer.SaveToXml(file, sprite);
+                        var file = saveFileDialog.FileName;
+                        var content = Json.Encode(sprite);
+                        File.WriteAllText(file, content);
 
-                        option.RecentSprite = file;
-                        option.Save();
+                        option.AppendProject(file).Save();
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(ex.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        logger.Error(ex.Message);
                         return;
                     }
                 }
@@ -890,11 +728,11 @@ namespace CssSprite
                 {
                     //保存图片
                     bigImg.Save(imgPath, format);
-                    MessageBox.Show("图片生成成功！");
+                    logger.Success("图片生成成功！");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message + "图片生成失败，被覆盖文件可能被其他程序占用，请换个文件名！");
+                    logger.Error(ex.Message + "图片生成失败，被覆盖文件可能被其他程序占用，请换个文件名！");
                 }
             }
         }
@@ -902,14 +740,7 @@ namespace CssSprite
 
         public bool IsImgExists(string fileName)
         {
-            foreach (ImageInfo ii in _imgList)
-            {
-                if (string.Compare(ii.FileName, fileName, true) == 0)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return ImgList.Any(ii => string.Compare(ii.FileName, fileName, true) == 0);
         }
 
         private void txtSass_KeyDown(object sender, KeyEventArgs e)
@@ -937,10 +768,10 @@ namespace CssSprite
         {
             if (rdOrderByName.Checked)
             {
-                return _imgList.OrderBy(img => img.FileName).ToList();
+                return ImgList.OrderBy(img => img.FileName).ToList();
             }
 
-            return _imgList.OrderBy(img => img.Image.Width).ToList();
+            return ImgList.OrderBy(img => img.Image.Width).ToList();
         }
 
         private void ResumeLayout(object sender, EventArgs e)
@@ -982,22 +813,19 @@ namespace CssSprite
                     }
                 }
                 AddPictureBox(img, left, top, ii.Name);
-                if (cbAlign.Checked)
-                {
-                    if (i < list.Count - 1)
-                    {
-                        prevWidth = img.Width;
-                        prevHeight = img.Height;
-                        var next = list[i + 1];
-                        if (next.Image.Width != prevWidth)
-                        {
-                            left += img.Width + OFFSET;
-                        }
-                    }
-                }
-                else
+                if (!cbAlign.Checked)
                 {
                     left += img.Width + OFFSET;
+                }
+                else if (i < list.Count - 1)
+                {
+                    prevWidth = img.Width;
+                    prevHeight = img.Height;
+                    var next = list[i + 1];
+                    if (next.Image.Width != prevWidth)
+                    {
+                        left += img.Width + OFFSET;
+                    }
                 }
             }
 
@@ -1186,12 +1014,24 @@ namespace CssSprite
 
         private void LkRecent_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            var filename = lkRecent.Text;
+            if (e.Button != MouseButtons.Left)
+            {
+                return;
+            }
+
+            var filename = ((LinkLabel)sender).Text;
             if (string.IsNullOrWhiteSpace((filename)))
             {
                 return;
             }
             LoadSprite(filename);
+        }
+
+        private void btnNew_Click(object sender, EventArgs e)
+        {
+            Text = "新建项目";
+            ImgList?.Clear();
+            panelImages.Controls.Clear();
         }
     }
 }

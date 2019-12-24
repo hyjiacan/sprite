@@ -10,7 +10,7 @@ namespace CssSprite
 {
     class Option
     {
-        public string RecentSprite { get; set; }
+        public List<string> RecentProjects { get; set; }
 
         private readonly static string optionFile;
 
@@ -31,12 +31,26 @@ namespace CssSprite
                 return new Option();
             }
             var content = File.ReadAllText(optionFile);
-            return new JavaScriptSerializer().Deserialize<Option>(content);
+            var option = Json.Decode<Option>(content);
+            if (option.RecentProjects == null)
+            {
+                option.RecentProjects = new List<string>();
+            }
+            return option;
+        }
+
+        public Option AppendProject(string filename)
+        {
+            if (!RecentProjects.Contains(filename))
+            {
+                RecentProjects.Add(filename);
+            }
+            return this;
         }
 
         public void Save()
         {
-            File.WriteAllText(optionFile, new JavaScriptSerializer().Serialize(this));
+            File.WriteAllText(optionFile, Json.Encode(this));
         }
     }
 }
