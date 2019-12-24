@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CssSprite
+﻿namespace CssSprite
 {
     /// <summary>
     /// 边缘尺寸
