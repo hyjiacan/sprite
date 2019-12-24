@@ -251,7 +251,7 @@ namespace CssSprite
             saveFileDialog.FileName = filename;
             try
             {
-                var spriteFile = Json.Decode<SpriteFile>(File.ReadAllText(filename));
+                var spriteFile = SpriteFile.Load(filename);
                 if (ImgList == null)
                 {
                     ImgList = new List<ImageInfo>();
