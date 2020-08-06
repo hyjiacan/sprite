@@ -35,6 +35,11 @@ namespace CssSprite
             return option;
         }
 
+        public Option()
+        {
+            RecentProjects = new List<string>();
+        }
+
         public Option AppendProject(string filename)
         {
             if (!RecentProjects.Contains(filename))
