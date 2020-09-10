@@ -49,6 +49,13 @@ namespace CssSprite
                 toolTip.SetToolTip(link, project);
                 recentList.Controls.Add(link);
             });
+
+            cbCssFileType.Items.Add(OutputTypes.CSS_LESS);
+            cbCssFileType.Items.Add(OutputTypes.CSS_LESS_BASE64);
+            cbCssFileType.Items.Add(OutputTypes.SASS);
+            cbCssFileType.Items.Add(OutputTypes.SASS_BASE64);
+
+            cbCssFileType.Text = OutputTypes.CSS_LESS.ToString();
         }
 
         #region 鼠标和键盘支持
@@ -419,19 +426,19 @@ namespace CssSprite
                 list.Add(pb);
             }
             var edgeSize = GetEdgeSize(list);
-            var tmpStr = "{0}" + txtName.Text + "[background:url(" + txtName.Text + "." + GetImgExt() + ") no-repeat {1};]" + Environment.NewLine;
+            var tmpStr = "{0}[class^=" + tbPrefix.Text + "]->display:inline-block;background:url(" + txtName.Text + "." + GetImgExt() + ") no-repeat {1};<-" + Environment.NewLine;
             string sassStr;
             string cssStr;
             if (chkBoxPhone.Checked)
             {
                 chkBoxPhone_CheckedChanged(null, EventArgs.Empty);
-                sassStr = string.Format(tmpStr, "@mixin ", ";background-size:$_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("[", "{").Replace("]", "}");
-                cssStr = string.Format(tmpStr, ".", ";background-size:@_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("[", "{").Replace("]", "}");
+                sassStr = string.Format(tmpStr, "@mixin ", ";background-size:$_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("->", "{").Replace("<-", "}");
+                cssStr = string.Format(tmpStr, "", ";background-size:@_" + (edgeSize.MaxWidth - edgeSize.MinWidth) + " $_" + (edgeSize.MaxHeight - edgeSize.MinHeight)).Replace("->", "{").Replace("<-", "}");
             }
             else
             {
-                sassStr = string.Format(tmpStr, "@mixin ", "").Replace("[", "{").Replace("]", "}");
-                cssStr = string.Format(tmpStr, ".", "").Replace("[", "{").Replace("]", "}");
+                sassStr = string.Format(tmpStr, "@mixin ", "").Replace("->", "{").Replace("<-", "}");
+                cssStr = string.Format(tmpStr, "", "").Replace("->", "{").Replace("<-", "}");
             }
 
             foreach (PictureBox pb in panelImages.Controls)
@@ -605,13 +612,14 @@ namespace CssSprite
                 return;
             }
 
+            saveFileDialog.FileName = $"{txtName.Text}.sprite";
             DialogResult dr = saveFileDialog.ShowDialog();
             if (dr != DialogResult.OK)
             {
                 return;
             }
-            string imgDir = Path.GetDirectoryName(saveFileDialog.FileName);
-            string imgPath = Path.Combine(imgDir, txtName.Text + "." + GetImgExt());
+            string projectPath = Path.GetDirectoryName(saveFileDialog.FileName);
+            string imgPath = Path.Combine(projectPath, txtName.Text + "." + GetImgExt());
             if (File.Exists(imgPath))
             {
                 if (DialogResult.Yes !=
@@ -688,10 +696,10 @@ namespace CssSprite
                     };
                     try
                     {
-                        var outputPath = Path.Combine(imgDir, tbSrc.Text);
-                        if (!Directory.Exists(outputPath))
+                        var srcPath = Path.Combine(projectPath, tbSrc.Text);
+                        if (!Directory.Exists(srcPath))
                         {
-                            Directory.CreateDirectory(outputPath);
+                            Directory.CreateDirectory(srcPath);
                         }
                         foreach (PictureBox pb in panelImages.Controls)
                         {
@@ -706,8 +714,8 @@ namespace CssSprite
                             sprite.Images.Add(s);
                             g.DrawImage(pb.Image, pb.Location.X - minWidth, pb.Location.Y - minHeight, pb.Image.Width, pb.Image.Height);
 
-                            var destFile = Path.Combine(outputPath, Path.GetFileName(path));
-                            if (Path.GetDirectoryName(path) != outputPath && path != destFile)
+                            var destFile = Path.Combine(srcPath, Path.GetFileName(path));
+                            if (Path.GetDirectoryName(path) != srcPath && path != destFile)
                             {
                                 File.Copy(path, destFile, true);
                             }
@@ -734,6 +742,36 @@ namespace CssSprite
                 {
                     logger.Error(ex.Message + "图片生成失败，被覆盖文件可能被其他程序占用，请换个文件名！");
                 }
+                if (!cbCssFile.Checked)
+                {
+                    return;
+                }
+                // 保存文件
+                Enum.TryParse(cbCssFileType.Text, out OutputTypes type);
+                string ext, css;
+                switch (type)
+                {
+                    case OutputTypes.CSS_LESS:
+                        ext = "css";
+                        css = txtCss.Text;
+                        break;
+                    case OutputTypes.CSS_LESS_BASE64:
+                        ext = "css";
+                        css = txtBase64Css.Text;
+                        break;
+                    case OutputTypes.SASS:
+                        ext = "sass";
+                        css = txtCss.Text;
+                        break;
+                    case OutputTypes.SASS_BASE64:
+                        ext = "sass";
+                        css = txtBase64Sass.Text;
+                        break;
+                    default:
+                        return;
+                }
+
+                File.WriteAllText(Path.Combine(projectPath, $"{txtName.Text}.{ext}"), css);
             }
         }
 
@@ -1032,6 +1070,11 @@ namespace CssSprite
             Text = "新建项目";
             ImgList?.Clear();
             panelImages.Controls.Clear();
+        }
+
+        private void txtName_TextChanged_1(object sender, EventArgs e)
+        {
+            tbPrefix.Text = $"{txtName.Text.TrimEnd('-')}-";
         }
     }
 }

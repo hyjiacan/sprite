@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Area.cs" />
     <Compile Include="EdgeSize.cs" />
+    <Compile Include="OutputTypes.cs" />
     <Compile Include="FormMain.cs">
       <SubType>Form</SubType>
     </Compile>
