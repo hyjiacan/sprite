@@ -1,5 +1,7 @@
-﻿using System;
+﻿using hyjiacan.py4n;
+using System;
 using System.Drawing;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace CssSprite
@@ -78,13 +80,16 @@ namespace CssSprite
             }
         }
 
+        const PinyinFormat PINYIN_FORMAT = PinyinFormat.LOWERCASE | PinyinFormat.WITHOUT_TONE | PinyinFormat.WITH_U_UNICODE;
         public static string GetCssName(string imgName)
         {
-            if (char.IsNumber(imgName[0]))
+            var pinyin = Pinyin4Net.GetPinyin(imgName, PINYIN_FORMAT, false, false, true).ToLower().Replace(" ", "");
+            var name = Regex.Replace(pinyin, "[^0-9a-z]+", "-");
+            if (char.IsNumber(name[0]))
             {
-                return "_" + imgName;
+                return "_" + name;
             }
-            return imgName;
+            return name;
         }
     }
 }

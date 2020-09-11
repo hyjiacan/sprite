@@ -78,13 +78,16 @@
             this.panel8 = new System.Windows.Forms.Panel();
             this.panel9 = new System.Windows.Forms.Panel();
             this.panel10 = new System.Windows.Forms.Panel();
+            this.panel13 = new System.Windows.Forms.Panel();
+            this.cbCssFileType = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.cbCssFile = new System.Windows.Forms.CheckBox();
+            this.panel14 = new System.Windows.Forms.Panel();
+            this.btnOutput = new System.Windows.Forms.Button();
             this.canvasButtons = new System.Windows.Forms.Panel();
             this.tLogs = new System.Windows.Forms.RichTextBox();
             this.panel12 = new System.Windows.Forms.Panel();
-            this.panel13 = new System.Windows.Forms.Panel();
-            this.cbCssFile = new System.Windows.Forms.CheckBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.cbCssFileType = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
             this.tabControl.SuspendLayout();
@@ -103,9 +106,10 @@
             this.panel7.SuspendLayout();
             this.panel9.SuspendLayout();
             this.panel10.SuspendLayout();
+            this.panel13.SuspendLayout();
+            this.panel14.SuspendLayout();
             this.canvasButtons.SuspendLayout();
             this.panel12.SuspendLayout();
-            this.panel13.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog
@@ -305,7 +309,7 @@
             this.tabCanvas.Location = new System.Drawing.Point(4, 32);
             this.tabCanvas.Name = "tabCanvas";
             this.tabCanvas.Padding = new System.Windows.Forms.Padding(3);
-            this.tabCanvas.Size = new System.Drawing.Size(513, 350);
+            this.tabCanvas.Size = new System.Drawing.Size(638, 452);
             this.tabCanvas.TabIndex = 4;
             this.tabCanvas.Text = "画布";
             this.tabCanvas.UseVisualStyleBackColor = true;
@@ -318,7 +322,7 @@
             this.panelImages.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelImages.Location = new System.Drawing.Point(3, 3);
             this.panelImages.Name = "panelImages";
-            this.panelImages.Size = new System.Drawing.Size(507, 344);
+            this.panelImages.Size = new System.Drawing.Size(632, 446);
             this.panelImages.TabIndex = 0;
             // 
             // tabPage1
@@ -349,7 +353,7 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 32);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(513, 350);
+            this.tabPage3.Size = new System.Drawing.Size(638, 452);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "sass Base64";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -365,7 +369,7 @@
             this.txtBase64Sass.Name = "txtBase64Sass";
             this.txtBase64Sass.ReadOnly = true;
             this.txtBase64Sass.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtBase64Sass.Size = new System.Drawing.Size(507, 344);
+            this.txtBase64Sass.Size = new System.Drawing.Size(632, 446);
             this.txtBase64Sass.TabIndex = 12;
             this.txtBase64Sass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBase64Sass_KeyDown);
             // 
@@ -375,7 +379,7 @@
             this.tabPage4.Location = new System.Drawing.Point(4, 32);
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(513, 350);
+            this.tabPage4.Size = new System.Drawing.Size(638, 452);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "css Base64";
             this.tabPage4.UseVisualStyleBackColor = true;
@@ -391,13 +395,15 @@
             this.txtBase64Css.Name = "txtBase64Css";
             this.txtBase64Css.ReadOnly = true;
             this.txtBase64Css.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtBase64Css.Size = new System.Drawing.Size(507, 344);
+            this.txtBase64Css.Size = new System.Drawing.Size(632, 446);
             this.txtBase64Css.TabIndex = 12;
             this.txtBase64Css.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBase64Css_KeyDown);
             // 
             // cbAlign
             // 
             this.cbAlign.AutoSize = true;
+            this.cbAlign.Checked = true;
+            this.cbAlign.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbAlign.Location = new System.Drawing.Point(9, 6);
             this.cbAlign.Name = "cbAlign";
             this.cbAlign.Size = new System.Drawing.Size(144, 16);
@@ -493,6 +499,7 @@
             this.flowLayoutPanel1.Controls.Add(this.panel9);
             this.flowLayoutPanel1.Controls.Add(this.panel10);
             this.flowLayoutPanel1.Controls.Add(this.panel13);
+            this.flowLayoutPanel1.Controls.Add(this.panel14);
             this.flowLayoutPanel1.Location = new System.Drawing.Point(6, 294);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(244, 370);
@@ -538,7 +545,7 @@
             this.txtName.Name = "txtName";
             this.txtName.Size = new System.Drawing.Size(121, 21);
             this.txtName.TabIndex = 1;
-            this.txtName.Text = "sprite-icon";
+            this.txtName.Text = "icon";
             this.txtName.TextChanged += new System.EventHandler(this.txtName_TextChanged_1);
             // 
             // panel5
@@ -561,7 +568,7 @@
             this.tbPrefix.Name = "tbPrefix";
             this.tbPrefix.Size = new System.Drawing.Size(121, 21);
             this.tbPrefix.TabIndex = 1;
-            this.tbPrefix.Text = "sprite-";
+            this.tbPrefix.Text = "icon-";
             // 
             // label4
             // 
@@ -647,6 +654,71 @@
             this.panel10.Size = new System.Drawing.Size(241, 27);
             this.panel10.TabIndex = 12;
             // 
+            // panel13
+            // 
+            this.panel13.Controls.Add(this.cbCssFileType);
+            this.panel13.Controls.Add(this.label3);
+            this.panel13.Controls.Add(this.cbCssFile);
+            this.panel13.Location = new System.Drawing.Point(3, 283);
+            this.panel13.Name = "panel13";
+            this.panel13.Size = new System.Drawing.Size(241, 27);
+            this.panel13.TabIndex = 13;
+            // 
+            // cbCssFileType
+            // 
+            this.cbCssFileType.DisplayMember = "Type";
+            this.cbCssFileType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbCssFileType.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cbCssFileType.FormattingEnabled = true;
+            this.cbCssFileType.Location = new System.Drawing.Point(140, 2);
+            this.cbCssFileType.Name = "cbCssFileType";
+            this.cbCssFileType.Size = new System.Drawing.Size(93, 20);
+            this.cbCssFileType.TabIndex = 2;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(108, 7);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(29, 12);
+            this.label3.TabIndex = 1;
+            this.label3.Text = "格式";
+            // 
+            // cbCssFile
+            // 
+            this.cbCssFile.AutoSize = true;
+            this.cbCssFile.Checked = true;
+            this.cbCssFile.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbCssFile.Location = new System.Drawing.Point(9, 5);
+            this.cbCssFile.Name = "cbCssFile";
+            this.cbCssFile.Size = new System.Drawing.Size(96, 16);
+            this.cbCssFile.TabIndex = 0;
+            this.cbCssFile.Text = "输出样式文件";
+            this.cbCssFile.UseVisualStyleBackColor = true;
+            // 
+            // panel14
+            // 
+            this.panel14.Controls.Add(this.label6);
+            this.panel14.Controls.Add(this.btnOutput);
+            this.panel14.Location = new System.Drawing.Point(3, 316);
+            this.panel14.Name = "panel14";
+            this.panel14.Size = new System.Drawing.Size(241, 53);
+            this.panel14.TabIndex = 15;
+            // 
+            // btnOutput
+            // 
+            this.btnOutput.BackColor = System.Drawing.Color.RoyalBlue;
+            this.btnOutput.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnOutput.ForeColor = System.Drawing.Color.White;
+            this.btnOutput.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnOutput.Location = new System.Drawing.Point(164, 6);
+            this.btnOutput.Name = "btnOutput";
+            this.btnOutput.Size = new System.Drawing.Size(69, 40);
+            this.btnOutput.TabIndex = 14;
+            this.btnOutput.Text = "输出";
+            this.btnOutput.UseVisualStyleBackColor = false;
+            this.btnOutput.Click += new System.EventHandler(this.btnOutput_Click);
+            // 
             // canvasButtons
             // 
             this.canvasButtons.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -683,47 +755,15 @@
             this.panel12.Size = new System.Drawing.Size(651, 663);
             this.panel12.TabIndex = 29;
             // 
-            // panel13
+            // label6
             // 
-            this.panel13.Controls.Add(this.cbCssFileType);
-            this.panel13.Controls.Add(this.label3);
-            this.panel13.Controls.Add(this.cbCssFile);
-            this.panel13.Location = new System.Drawing.Point(3, 283);
-            this.panel13.Name = "panel13";
-            this.panel13.Size = new System.Drawing.Size(241, 27);
-            this.panel13.TabIndex = 13;
-            // 
-            // cbCssFile
-            // 
-            this.cbCssFile.AutoSize = true;
-            this.cbCssFile.Checked = true;
-            this.cbCssFile.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbCssFile.Location = new System.Drawing.Point(9, 5);
-            this.cbCssFile.Name = "cbCssFile";
-            this.cbCssFile.Size = new System.Drawing.Size(96, 16);
-            this.cbCssFile.TabIndex = 0;
-            this.cbCssFile.Text = "输出样式文件";
-            this.cbCssFile.UseVisualStyleBackColor = true;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(108, 7);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(29, 12);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "格式";
-            // 
-            // cbCssFileType
-            // 
-            this.cbCssFileType.DisplayMember = "Type";
-            this.cbCssFileType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbCssFileType.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.cbCssFileType.FormattingEnabled = true;
-            this.cbCssFileType.Location = new System.Drawing.Point(140, 2);
-            this.cbCssFileType.Name = "cbCssFileType";
-            this.cbCssFileType.Size = new System.Drawing.Size(93, 20);
-            this.cbCssFileType.TabIndex = 2;
+            this.label6.ForeColor = System.Drawing.Color.Gray;
+            this.label6.Location = new System.Drawing.Point(11, 7);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(143, 37);
+            this.label6.TabIndex = 15;
+            this.label6.Text = "不保存项目\r\n直接生成目标文件";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // FormMain
             // 
@@ -768,11 +808,12 @@
             this.panel9.PerformLayout();
             this.panel10.ResumeLayout(false);
             this.panel10.PerformLayout();
+            this.panel13.ResumeLayout(false);
+            this.panel13.PerformLayout();
+            this.panel14.ResumeLayout(false);
             this.canvasButtons.ResumeLayout(false);
             this.canvasButtons.PerformLayout();
             this.panel12.ResumeLayout(false);
-            this.panel13.ResumeLayout(false);
-            this.panel13.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -834,6 +875,9 @@
         private System.Windows.Forms.CheckBox cbCssFile;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox cbCssFileType;
+        private System.Windows.Forms.Panel panel14;
+        private System.Windows.Forms.Button btnOutput;
+        private System.Windows.Forms.Label label6;
     }
 }
 

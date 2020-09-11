@@ -56,6 +56,9 @@
     <ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="hyjiacan.py4n, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\hyjiacan.py4n.4.0.0\lib\net45\hyjiacan.py4n.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
@@ -99,6 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="logo.ico" />
+    <None Include="packages.config" />
     <None Include="Resources\horizontal.png" />
     <None Include="Resources\vertical.png" />
     <None Include="Resources\transparent.png" />

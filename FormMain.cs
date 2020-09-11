@@ -1076,5 +1076,151 @@ namespace CssSprite
         {
             tbPrefix.Text = $"{txtName.Text.TrimEnd('-')}-";
         }
+
+        private void btnOutput_Click(object sender, EventArgs e)
+        {
+            panelImages.VerticalScroll.Value = 0;
+            panelImages.HorizontalScroll.Value = 0;
+            if (ImgList == null || ImgList.Count < 2)
+            {
+                logger.Warn("请选择多个背景图片。");
+                return;
+            }
+
+            var browser = new FolderBrowserDialog();
+            DialogResult dr = browser.ShowDialog();
+
+            if (dr != DialogResult.OK)
+            {
+                return;
+            }
+
+            string projectPath = browser.SelectedPath;
+            string imgPath = Path.Combine(projectPath, txtName.Text + "." + GetImgExt());
+            if (File.Exists(imgPath))
+            {
+                if (DialogResult.Yes !=
+                    MessageBox.Show("选定文件夹中已存在" + txtName.Text + "." + GetImgExt() + "，继续执行将覆盖已存在文件，是否继续？", "询问"
+                    , MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+                {
+                    return;
+                }
+            }
+
+            int maxWidth, maxHeight, minWidth, minHeight;
+            maxWidth = maxHeight = minWidth = minHeight = 0;
+            //循环获取距离左边和上边最小距离
+            //把所有元素按照0，0点为标准，通过最小向上距离和向左距离平移，获取最大距离
+            foreach (PictureBox pb in panelImages.Controls)
+            {
+                if (panelImages.Controls.GetChildIndex(pb) == 0)
+                {
+                    minWidth = pb.Location.X;
+                    minHeight = pb.Location.Y;
+                }
+                minWidth = Math.Min(minWidth, pb.Location.X);
+                minHeight = Math.Min(minHeight, pb.Location.Y);
+                maxWidth = Math.Max(maxWidth, pb.Location.X + pb.Image.Width);
+                maxHeight = Math.Max(maxHeight, pb.Location.Y + pb.Image.Height);
+            }
+            Size imgSize = new Size(maxWidth, maxHeight);
+            //var codeMime = string.Empty;
+            using (Bitmap bigImg = new Bitmap(imgSize.Width - minWidth, imgSize.Height - minHeight, PixelFormat.Format32bppArgb))
+            {
+                string imgType = GetImgExt();
+                ImageFormat format = ImageFormat.Png;
+                switch (imgType)
+                {
+                    case "jpeg":
+                        format = ImageFormat.Jpeg;
+                        break;
+                    case "jpg":
+                        format = ImageFormat.Jpeg;
+                        break;
+                    case "png":
+                        format = ImageFormat.Png;
+                        break;
+                    default:
+                        break;
+                }
+                using (Graphics g = Graphics.FromImage(bigImg))
+                {
+                    //设置高质量插值法 
+                    g.InterpolationMode = InterpolationMode.High;
+                    //设置高质量,低速度呈现平滑度 
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    //清空画布并以透明背景色填充 
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+                    if ((format == ImageFormat.Jpeg)) g.Clear(Color.White);
+                    else g.Clear(Color.Transparent);
+
+                    SetCssText();
+                    SetBase64();
+                    try
+                    {
+                        foreach (PictureBox pb in panelImages.Controls)
+                        {
+                            var img = (ImageInfo)pb.Image.Tag;
+                            var path = img.FileName;
+                            SpriteImage s = new SpriteImage()
+                            {
+                                Y = pb.Location.Y,
+                                X = pb.Location.X,
+                                File = Path.GetFileName(path)
+                            };
+                            g.DrawImage(pb.Image, pb.Location.X - minWidth, pb.Location.Y - minHeight, pb.Image.Width, pb.Image.Height);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error(ex.Message);
+                        return;
+                    }
+                }
+                try
+                {
+                    //保存图片
+                    bigImg.Save(imgPath, format);
+                    logger.Success("图片生成成功！");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex.Message + "图片生成失败，被覆盖文件可能被其他程序占用，请换个文件名！");
+                }
+                if (!cbCssFile.Checked)
+                {
+                    return;
+                }
+                // 保存文件
+                Enum.TryParse(cbCssFileType.Text, out OutputTypes type);
+                string ext, css;
+                switch (type)
+                {
+                    case OutputTypes.CSS_LESS:
+                        ext = "css";
+                        css = txtCss.Text;
+                        break;
+                    case OutputTypes.CSS_LESS_BASE64:
+                        ext = "css";
+                        css = txtBase64Css.Text;
+                        break;
+                    case OutputTypes.SASS:
+                        ext = "sass";
+                        css = txtCss.Text;
+                        break;
+                    case OutputTypes.SASS_BASE64:
+                        ext = "sass";
+                        css = txtBase64Sass.Text;
+                        break;
+                    default:
+                        return;
+                }
+
+                File.WriteAllText(Path.Combine(projectPath, $"{txtName.Text}.{ext}"), css);
+            }
+        }
     }
 }
